@@ -1,5 +1,6 @@
 package com.byteze.labti.absensi
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -10,7 +11,14 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.google.zxing.integration.android.IntentIntegrator
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.budiyev.android.codescanner.AutoFocusMode
+import com.budiyev.android.codescanner.CodeScanner
+import com.budiyev.android.codescanner.CodeScannerView
+import com.budiyev.android.codescanner.DecodeCallback
+import com.budiyev.android.codescanner.ErrorCallback
+import com.budiyev.android.codescanner.ScanMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,22 +26,101 @@ import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 
 class ScannerActivity : AppCompatActivity() {
+    private lateinit var codeScanner: CodeScanner
+    private val CAMERA_PERMISSION_CODE = 100
+
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_scanner)
 
-        // Mulai scanner barcode
-        startBarcodeScanner()
+        getAppSignature()
+
+        // Setup scanner
+        setupScanner()
+
+        // Memeriksa izin kamera
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE)
+        } else {
+            startScanner()
+        }
     }
 
-    private fun startBarcodeScanner() {
-        val integrator = IntentIntegrator(this)
-        integrator.setPrompt("Scan Barcode")
-        integrator.setBeepEnabled(true)
-        integrator.initiateScan()
+    @RequiresApi(Build.VERSION_CODES.P)
+    private fun setupScanner() {
+        val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
+        codeScanner = CodeScanner(this, scannerView)
+
+        // Konfigurasi scanner
+        codeScanner.apply {
+            camera = CodeScanner.CAMERA_BACK // Atau CAMERA_FRONT
+            formats = CodeScanner.ALL_FORMATS
+            autoFocusMode = AutoFocusMode.SAFE
+            scanMode = ScanMode.SINGLE
+            isAutoFocusEnabled = true
+            isFlashEnabled = false
+
+            decodeCallback = DecodeCallback {
+                runOnUiThread {
+                    val barcodeData = it.text
+                    val appSignature = getAppSignature()
+
+                    // Cek apakah hasil scan sesuai dengan kode yang diharapkan
+                    if (barcodeData == "AKUCNTAKM") {
+                        if (appSignature != null) {
+                            verifyBarcodeWithSignature(barcodeData, appSignature)
+                        } else {
+                            Toast.makeText(this@ScannerActivity, "Signature not found", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // Jika hasil scan tidak sesuai, tampilkan toast dan restart scanner
+                        Toast.makeText(this@ScannerActivity, "Kode tidak valid: $barcodeData", Toast.LENGTH_SHORT).show()
+                        codeScanner.startPreview() // Restart scanner untuk scan barcode berikutnya
+                    }
+                }
+            }
+
+            errorCallback = ErrorCallback {
+                runOnUiThread {
+                    Toast.makeText(this@ScannerActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
+    private fun startScanner() {
+        codeScanner.startPreview()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startScanner()
+        } else {
+            Toast.makeText(this, "Izin kamera diperlukan untuk menggunakan scanner", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        codeScanner.startPreview()
+    }
+
+    override fun onPause() {
+        codeScanner.releaseResources()
+        super.onPause()
+    }
+
+    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finishAffinity() // Menutup aplikasi ketika tombol kembali ditekan
+    }
+
+    // Mendapatkan App Signature untuk verifikasi keamanan
     @RequiresApi(Build.VERSION_CODES.P)
     private fun getAppSignature(): String? {
         return try {
@@ -42,39 +129,19 @@ class ScannerActivity : AppCompatActivity() {
             val md = MessageDigest.getInstance("SHA")
             for (signature in signatures) {
                 md.update(signature.toByteArray())
-                return Base64.encodeToString(md.digest(), Base64.NO_WRAP)
+                val appSignature = Base64.encodeToString(md.digest(), Base64.NO_WRAP)
+                Log.d("AppSignature", appSignature)
+                return appSignature
             }
             null
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
-    @RequiresApi(Build.VERSION_CODES.P)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents != null) {
-                // Setelah barcode discan, lakukan verifikasi ke backend
-                val barcodeData = result.contents
-                val appSignature = getAppSignature()
-
-                if (appSignature != null) {
-                    verifyBarcodeWithSignature(barcodeData, appSignature)
-                } else {
-                    Toast.makeText(this, "Signature not found", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(this, "Scan dibatalkan", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
+    // Verifikasi barcode dengan signature ke backend
     private fun verifyBarcodeWithSignature(barcode: String, signature: String) {
-        // Jalankan proses verifikasi di background
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val apiService = getApiService()
@@ -82,7 +149,7 @@ class ScannerActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
-                        // Jika verifikasi sukses, tampilkan form untuk diisi pengguna
+                        // Jika verifikasi sukses, tampilkan form absen untuk diisi pengguna
                         showAttendanceForm(barcode)
                     } else {
                         Toast.makeText(this@ScannerActivity, "Verifikasi gagal: ${response.message}", Toast.LENGTH_SHORT).show()
@@ -96,9 +163,10 @@ class ScannerActivity : AppCompatActivity() {
         }
     }
 
+    // Menampilkan form absen setelah verifikasi sukses
     private fun showAttendanceForm(barcodeData: String) {
-        // Tampilkan form absen di sini (bisa DialogFragment atau Activity baru)
-        Log.d("ScannerActivity", "Verifikasi sukses, tampilkan form absen")
-        // Implementasikan tampilan form absen yang akan diisi pengguna
+        val intent = Intent(this, AttendanceFormActivity::class.java)
+        startActivity(intent)
+        finish() // Selesai dengan ScannerActivity
     }
 }

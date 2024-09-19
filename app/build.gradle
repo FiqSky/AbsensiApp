@@ -43,9 +43,8 @@ dependencies {
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
 
-    // ZXing untuk scanner barcode
-    implementation libs.zxing.android.embedded
-    implementation libs.core
+    // Scanner
+    implementation libs.code.scanner
 
     // Retrofit untuk HTTP request ke backend
     implementation libs.retrofit
