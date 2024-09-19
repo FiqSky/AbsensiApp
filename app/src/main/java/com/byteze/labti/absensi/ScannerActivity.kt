@@ -1,6 +1,7 @@
 package com.byteze.labti.absensi
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -35,19 +36,47 @@ class ScannerActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_scanner)
 
-        getAppSignature()
+        // Cek status user di SharedPreferences
+        val sharedPref = getSharedPreferences("UserStatus", MODE_PRIVATE)
 
-        // Setup scanner
-        setupScanner()
+        if (sharedPref.getBoolean("checkoutCompleted", false)) {
+            // Jika sudah checkout, reset dan mulai dari awal (scan barcode lagi)
+            clearUserStatus()
+        }
 
-        // Memeriksa izin kamera
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE)
-        } else {
-            startScanner()
+        // Cek apakah barcode sudah diverifikasi atau form sudah diisi
+        when {
+            sharedPref.getBoolean("formCompleted", false) -> {
+                // Jika sudah mengisi form, langsung ke CheckoutActivity
+                startActivity(Intent(this, CheckoutActivity::class.java))
+                finish()
+            }
+            sharedPref.getBoolean("barcodeVerified", false) -> {
+                // Jika barcode sudah diverifikasi, langsung ke AttendanceFormActivity
+                startActivity(Intent(this, AttendanceFormActivity::class.java))
+                finish()
+            }
+            else -> {
+                // Setup scanner jika barcode belum diverifikasi
+                setupScanner()
+
+                // Memeriksa izin kamera
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_DENIED) {
+                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE)
+                } else {
+                    startScanner()
+                }
+            }
         }
     }
+
+    private fun clearUserStatus() {
+        // Hapus informasi status user dari SharedPreferences
+        val sharedPref = getSharedPreferences("UserStatus", MODE_PRIVATE)
+        sharedPref.edit().clear().apply()
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.P)
     private fun setupScanner() {
@@ -85,7 +114,7 @@ class ScannerActivity : AppCompatActivity() {
 
             errorCallback = ErrorCallback {
                 runOnUiThread {
-                    Toast.makeText(this@ScannerActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ScannerActivity, "Error: ${it.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -149,6 +178,9 @@ class ScannerActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
+                        // Simpan status bahwa barcode sudah diverifikasi ke SharedPreferences
+                        saveBarcodeVerificationStatus()
+
                         // Jika verifikasi sukses, tampilkan form absen untuk diisi pengguna
                         showAttendanceForm(barcode)
                     } else {
@@ -162,6 +194,17 @@ class ScannerActivity : AppCompatActivity() {
             }
         }
     }
+
+    // Simpan status barcode yang sudah diverifikasi
+    private fun saveBarcodeVerificationStatus() {
+        val sharedPref = getSharedPreferences("UserStatus", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+
+        // Simpan status bahwa barcode sudah diverifikasi
+        editor.putBoolean("barcodeVerified", true)
+        editor.apply()
+    }
+
 
     // Menampilkan form absen setelah verifikasi sukses
     private fun showAttendanceForm(barcodeData: String) {

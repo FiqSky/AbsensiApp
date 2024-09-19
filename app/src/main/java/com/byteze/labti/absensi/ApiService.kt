@@ -29,7 +29,7 @@ data class CheckoutResponse(val success: Boolean, val message: String)
 
 fun getApiService(): ApiService {
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://your-backend-url.com/")
+        .baseUrl("https://1ac6-112-215-242-49.ngrok-free.app/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

@@ -36,6 +36,7 @@ class CheckoutActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.success) {
                         Toast.makeText(this@CheckoutActivity, "Checkout berhasil", Toast.LENGTH_SHORT).show()
+                        clearUserStatus() // Reset status user setelah checkout berhasil
                         finish() // Kembali ke activity sebelumnya
                     } else {
                         Toast.makeText(this@CheckoutActivity, "Checkout gagal: ${response.message}", Toast.LENGTH_SHORT).show()
@@ -47,5 +48,11 @@ class CheckoutActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun clearUserStatus() {
+        // Hapus informasi status user dari SharedPreferences
+        val sharedPref = getSharedPreferences("UserStatus", MODE_PRIVATE)
+        sharedPref.edit().clear().apply()
     }
 }

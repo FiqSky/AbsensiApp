@@ -1,5 +1,6 @@
 package com.byteze.labti.absensi
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -69,6 +70,9 @@ class AttendanceFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
+                        // Simpan status form sudah diisi ke SharedPreferences
+                        saveFormCompletedStatus()
+
                         Toast.makeText(this@AttendanceFormActivity, "Data absen berhasil dikirim", Toast.LENGTH_SHORT).show()
                         navigateToCheckoutActivity()
                     } else {
@@ -81,6 +85,16 @@ class AttendanceFormActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    // Simpan status form sudah diisi ke SharedPreferences
+    private fun saveFormCompletedStatus() {
+        val sharedPref = getSharedPreferences("UserStatus", Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+
+        // Simpan status bahwa form telah diisi
+        editor.putBoolean("formCompleted", true)
+        editor.apply()
     }
 
     private fun navigateToCheckoutActivity() {
