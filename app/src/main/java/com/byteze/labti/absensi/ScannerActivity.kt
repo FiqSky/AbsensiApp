@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -20,12 +21,17 @@ import com.budiyev.android.codescanner.CodeScannerView
 import com.budiyev.android.codescanner.DecodeCallback
 import com.budiyev.android.codescanner.ErrorCallback
 import com.budiyev.android.codescanner.ScanMode
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 
+/**
+author Fiqih
+Copyright 2024, FiqSky Project
+ **/
 class ScannerActivity : AppCompatActivity() {
     private lateinit var codeScanner: CodeScanner
     private val CAMERA_PERMISSION_CODE = 100
@@ -99,16 +105,38 @@ class ScannerActivity : AppCompatActivity() {
 
                     // Cek apakah hasil scan sesuai dengan kode yang diharapkan
                     if (barcodeData == "AKUCNTAKM") {
+                        // Cek apakah signature tidak null
                         if (appSignature != null) {
                             verifyBarcodeWithSignature(barcodeData, appSignature)
                         } else {
-                            Toast.makeText(this@ScannerActivity, "Signature not found", Toast.LENGTH_SHORT).show()
+                            // Jika signature tidak ditemukan, tampilkan MaterialAlertDialog dan restart scanner
+                            MaterialAlertDialogBuilder(this@ScannerActivity)
+                                .setTitle("Kesalahan")
+                                .setMessage("Signature tidak ditemukan. Apakah Anda ingin mencoba lagi?")
+                                .setIcon(R.drawable.baseline_error_24) // Menambahkan ikon untuk dialog
+                                .setPositiveButton("Coba Lagi") { _, _ ->
+                                    codeScanner.startPreview() // Restart scanner untuk scan ulang
+                                }
+                                .setNegativeButton("Batal") { _, _ ->
+                                    finishAffinity() // Keluar dari aplikasi
+                                }
+                                .show()
                         }
                     } else {
-                        // Jika hasil scan tidak sesuai, tampilkan toast dan restart scanner
-                        Toast.makeText(this@ScannerActivity, "Kode tidak valid: $barcodeData", Toast.LENGTH_SHORT).show()
-                        codeScanner.startPreview() // Restart scanner untuk scan barcode berikutnya
+                        // Jika barcode tidak sesuai, tampilkan MaterialAlertDialog dan restart scanner
+                        MaterialAlertDialogBuilder(this@ScannerActivity)
+                            .setTitle("Barcode Tidak Valid")
+                            .setMessage("Kode barcode: $barcodeData.")
+                            .setIcon(R.drawable.baseline_warning_24) // Menambahkan ikon untuk dialog
+                            .setPositiveButton("Coba Lagi") { _, _ ->
+                                codeScanner.startPreview() // Restart scanner untuk scan ulang
+                            }
+                            .setNegativeButton("Batal") { _, _ ->
+                                finishAffinity() // Keluar dari aplikasi
+                            }
+                            .show()
                     }
+
                 }
             }
 
@@ -190,6 +218,7 @@ class ScannerActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@ScannerActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    codeScanner.startPreview() // Restart scanner untuk scan ulang
                 }
             }
         }

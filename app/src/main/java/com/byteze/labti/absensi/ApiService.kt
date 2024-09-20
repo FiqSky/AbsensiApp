@@ -7,7 +7,7 @@ import retrofit2.http.POST
 
 /**
 author Fiqih
-Copyright 2023, FiqSky Project
+Copyright 2024, FiqSky Project
  **/
 interface ApiService {
     @POST("/verifyBarcode")
@@ -29,7 +29,7 @@ data class CheckoutResponse(val success: Boolean, val message: String)
 
 fun getApiService(): ApiService {
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://1ac6-112-215-242-49.ngrok-free.app/")
+        .baseUrl("https://35f5-140-213-175-248.ngrok-free.app/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

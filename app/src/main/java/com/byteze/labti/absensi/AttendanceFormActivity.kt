@@ -15,6 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+author Fiqih
+Copyright 2024, FiqSky Project
+ **/
 class AttendanceFormActivity : AppCompatActivity() {
 
     private lateinit var etName: EditText
@@ -33,6 +37,8 @@ class AttendanceFormActivity : AppCompatActivity() {
 
         btnSubmit.setOnClickListener {
             if (validateForm()) {
+                // Nonaktifkan tombol agar tidak bisa diklik berulang kali
+                btnSubmit.isEnabled = false
                 submitAttendanceForm()
             }
         }
@@ -73,15 +79,19 @@ class AttendanceFormActivity : AppCompatActivity() {
                         // Simpan status form sudah diisi ke SharedPreferences
                         saveFormCompletedStatus()
 
-                        Toast.makeText(this@AttendanceFormActivity, "Data absen berhasil dikirim", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@AttendanceFormActivity, "Berhasil absen", Toast.LENGTH_SHORT).show()
                         navigateToCheckoutActivity()
                     } else {
-                        Toast.makeText(this@AttendanceFormActivity, "Gagal kirim: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@AttendanceFormActivity, "Gagal absen, coba lagi: ${response.message}", Toast.LENGTH_SHORT).show()
+                        // Aktifkan kembali tombol jika gagal submit
+                        btnSubmit.isEnabled = true
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@AttendanceFormActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    // Aktifkan kembali tombol jika ada error
+                    btnSubmit.isEnabled = true
                 }
             }
         }

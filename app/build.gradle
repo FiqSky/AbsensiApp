@@ -53,4 +53,5 @@ dependencies {
     // App signature (digunakan di langkah berikutnya)
     implementation libs.androidx.security.crypto
 
+    implementation libs.lottie
 }
