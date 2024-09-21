@@ -1,19 +1,20 @@
 package com.byteze.labti.absensi
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Base64
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /**
 author Fiqih
@@ -25,7 +26,10 @@ class AttendanceFormActivity : AppCompatActivity() {
     private lateinit var etNIM: EditText
     private lateinit var etWA: EditText
     private lateinit var btnSubmit: Button
+    private lateinit var signatureView: SignatureView
+    private lateinit var btnClearSignature: Button
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendance_form)
@@ -35,13 +39,36 @@ class AttendanceFormActivity : AppCompatActivity() {
         etWA = findViewById(R.id.etWA)
         btnSubmit = findViewById(R.id.btnSubmit)
 
+        signatureView = findViewById(R.id.signatureView)
+        btnClearSignature = findViewById(R.id.btnClearSignature)
+
+        btnClearSignature.setOnClickListener {
+            signatureView.clear()
+            Toast.makeText(this, "Tanda tangan dihapus", Toast.LENGTH_SHORT).show()
+        }
+
         btnSubmit.setOnClickListener {
             if (validateForm()) {
-                // Nonaktifkan tombol agar tidak bisa diklik berulang kali
+                val minSignatureLength = 1000f // Misalnya, 100px panjang minimal
+                if (!signatureView.isSignatureDrawn() || !signatureView.isSignatureValid(minSignatureLength)) {
+                    Toast.makeText(this, "Tanda tangan terlalu pendek atau tidak valid", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val signatureBitmap = signatureView.getSignatureBitmap()
+                val signatureBase64 = encodeBitmapToBase64(signatureBitmap)
+
                 btnSubmit.isEnabled = false
-                submitAttendanceForm()
+                submitAttendanceForm(signatureBase64)
             }
         }
+    }
+
+    private fun encodeBitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
     private fun validateForm(): Boolean {
@@ -60,15 +87,14 @@ class AttendanceFormActivity : AppCompatActivity() {
         return true
     }
 
-    private fun submitAttendanceForm() {
+    private fun submitAttendanceForm(signatureBase64: String) {
         val name = etName.text.toString()
         val nim = etNIM.text.toString()
         val wa = etWA.text.toString()
         val timestamp = System.currentTimeMillis()
 
-        val attendanceData = AttendanceData(name, nim, wa, timestamp)
+        val attendanceData = AttendanceData(name, nim, wa, timestamp, signatureBase64)
 
-        // Kirim form ke backend (menggunakan Retrofit)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val apiService = getApiService()
@@ -76,26 +102,23 @@ class AttendanceFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
-                        // Simpan status form sudah diisi ke SharedPreferences
                         saveFormCompletedStatus()
-
                         Toast.makeText(this@AttendanceFormActivity, "Berhasil absen", Toast.LENGTH_SHORT).show()
                         navigateToCheckoutActivity()
                     } else {
-                        Toast.makeText(this@AttendanceFormActivity, "Gagal absen, coba lagi: ${response.message}", Toast.LENGTH_SHORT).show()
-                        // Aktifkan kembali tombol jika gagal submit
                         btnSubmit.isEnabled = true
+                        Toast.makeText(this@AttendanceFormActivity, "Gagal absen: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@AttendanceFormActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    // Aktifkan kembali tombol jika ada error
                     btnSubmit.isEnabled = true
+                    Toast.makeText(this@AttendanceFormActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
+
 
     // Simpan status form sudah diisi ke SharedPreferences
     private fun saveFormCompletedStatus() {
