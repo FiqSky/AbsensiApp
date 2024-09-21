@@ -2,6 +2,7 @@ package com.byteze.labti.absensi
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -34,13 +35,25 @@ class CheckoutActivity : AppCompatActivity() {
     }
 
     private fun submitCheckout() {
-        val timestamp = System.currentTimeMillis()
+        val timestampCheckout = System.currentTimeMillis()
 
-        // Kirim timestamp ke backend untuk checkout
+        // Ambil nama dan timestamp hadir dari SharedPreferences
+        val sharedPref = getSharedPreferences("UserStatus", MODE_PRIVATE)
+        val name = sharedPref.getString("name", null) // Ambil nama
+
+        Log.d("CheckoutActivity", "Nama: $name, Timestamp checkout: $timestampCheckout")
+
+        if (name == null) {
+            Toast.makeText(this, "Error: Nama tidak ditemukan", Toast.LENGTH_SHORT).show()
+            isSubmitting = false
+            return
+        }
+
+        // Kirim nama dan timestamp ke backend untuk checkout
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val apiService = getApiService()
-                val response = apiService.checkout(CheckoutRequest(timestamp))
+                val response = apiService.checkout(CheckoutRequest(name, timestampCheckout))
 
                 withContext(Dispatchers.Main) {
                     isSubmitting = false // Set flag kembali ke false setelah pengiriman selesai

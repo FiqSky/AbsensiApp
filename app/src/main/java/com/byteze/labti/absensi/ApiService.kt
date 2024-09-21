@@ -24,7 +24,7 @@ data class VerificationRequest(val barcode: String, val signature: String)
 data class VerificationResponse(val success: Boolean, val message: String)
 data class AttendanceData(val name: String, val nim: String, val wa: String, val timestamp: Long, val signature: String)
 data class SubmissionResponse(val success: Boolean, val message: String)
-data class CheckoutRequest(val timestamp: Long)
+data class CheckoutRequest(val name: String, val timestampCheckout: Long)
 data class CheckoutResponse(val success: Boolean, val message: String)
 
 fun getApiService(): ApiService {

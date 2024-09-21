@@ -1,11 +1,13 @@
 package com.byteze.labti.absensi
 
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -94,6 +96,7 @@ class AttendanceFormActivity : AppCompatActivity() {
         val timestamp = System.currentTimeMillis()
 
         val attendanceData = AttendanceData(name, nim, wa, timestamp, signatureBase64)
+        Log.d(TAG, "signatureBase64 is: $signatureBase64")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -122,12 +125,16 @@ class AttendanceFormActivity : AppCompatActivity() {
 
     // Simpan status form sudah diisi ke SharedPreferences
     private fun saveFormCompletedStatus() {
+        val name = etName.text.toString() // name saat user submit form
         val sharedPref = getSharedPreferences("UserStatus", Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
 
         // Simpan status bahwa form telah diisi
         editor.putBoolean("formCompleted", true)
+        editor.putString("name", name) // Simpan timestamp hadir
         editor.apply()
+
+        Log.d("AttendanceActivity", "name: $name")
     }
 
     private fun navigateToCheckoutActivity() {
