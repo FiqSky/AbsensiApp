@@ -10,6 +10,8 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 /**
 author Fiqih
@@ -47,9 +49,9 @@ class SignatureView(context: Context, attrs: AttributeSet?) : View(context, attr
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (isTouchStarted) {
-                        val dx = Math.abs(it.x - lastX)
-                        val dy = Math.abs(it.y - lastY)
-                        totalDistance += Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat() // Tambah panjang garis
+                        val dx = abs(it.x - lastX)
+                        val dy = abs(it.y - lastY)
+                        totalDistance += sqrt((dx * dx + dy * dy).toDouble()).toFloat() // Tambah panjang garis
                         lastX = it.x
                         lastY = it.y
                         path.lineTo(it.x, it.y)

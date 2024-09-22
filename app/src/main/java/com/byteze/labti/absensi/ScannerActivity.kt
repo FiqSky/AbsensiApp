@@ -11,7 +11,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -109,18 +108,8 @@ class ScannerActivity : AppCompatActivity() {
                         if (appSignature != null) {
                             verifyBarcodeWithSignature(barcodeData, appSignature)
                         } else {
-                            // Jika signature tidak ditemukan, tampilkan MaterialAlertDialog dan restart scanner
-                            MaterialAlertDialogBuilder(this@ScannerActivity)
-                                .setTitle("Kesalahan")
-                                .setMessage("Signature tidak ditemukan. Apakah Anda ingin mencoba lagi?")
-                                .setIcon(R.drawable.baseline_error_24) // Menambahkan ikon untuk dialog
-                                .setPositiveButton("Coba Lagi") { _, _ ->
-                                    codeScanner.startPreview() // Restart scanner untuk scan ulang
-                                }
-                                .setNegativeButton("Batal") { _, _ ->
-                                    finishAffinity() // Keluar dari aplikasi
-                                }
-                                .show()
+                            Toast.makeText(this@ScannerActivity, "Signature invalid...", Toast.LENGTH_SHORT).show()
+                            codeScanner.startPreview()
                         }
                     } else {
                         // Jika barcode tidak sesuai, tampilkan MaterialAlertDialog dan restart scanner
@@ -171,6 +160,7 @@ class ScannerActivity : AppCompatActivity() {
         super.onPause()
     }
 
+    @Suppress("DEPRECATION")
     @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
     override fun onBackPressed() {
         super.onBackPressed()
@@ -210,7 +200,7 @@ class ScannerActivity : AppCompatActivity() {
                         saveBarcodeVerificationStatus()
 
                         // Jika verifikasi sukses, tampilkan form absen untuk diisi pengguna
-                        showAttendanceForm(barcode)
+                        showAttendanceForm()
                     } else {
                         Toast.makeText(this@ScannerActivity, "Verifikasi gagal: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
@@ -236,7 +226,7 @@ class ScannerActivity : AppCompatActivity() {
 
 
     // Menampilkan form absen setelah verifikasi sukses
-    private fun showAttendanceForm(barcodeData: String) {
+    private fun showAttendanceForm() {
         val intent = Intent(this, AttendanceFormActivity::class.java)
         startActivity(intent)
         finish() // Selesai dengan ScannerActivity

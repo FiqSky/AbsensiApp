@@ -29,7 +29,7 @@ data class CheckoutResponse(val success: Boolean, val message: String)
 
 fun getApiService(): ApiService {
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://3bd8-140-213-163-108.ngrok-free.app/")
+        .baseUrl("https://express-absensi-api.vercel.app")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
