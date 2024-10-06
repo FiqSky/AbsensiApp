@@ -12,7 +12,7 @@ Aplikasi ini digunakan untuk melakukan absensi dengan memindai barcode. Dilengka
 - **Android (Kotlin)**
 - **ZXing dan CodeScanner Library** untuk pemindaian barcode.
 - **Firebase ML Kit** untuk tambahan kemampuan scanning.
-- **MongoDB Atlas** untuk penyimpanan data absensi.
+- **Firebase Realtime Database** untuk penyimpanan data absensi.
 - **Express.js (Backend)** untuk mengelola API absensi.
 
 ## Cara Menggunakan
