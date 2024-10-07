@@ -1,60 +1,127 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="#F5F5F5">
+
+    <!-- Header TextView -->
+    <TextView
+        android:id="@+id/tvPageTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Formulir Absensi"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:layout_gravity="center"
+        android:paddingBottom="16dp"/>
 
     <!-- Nama Field -->
-    <EditText
-        android:id="@+id/etName"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:hint="Nama"
-        android:padding="16dp"
-        android:inputType="textPersonName"
-        android:textColorHint="#B0B0B0"/>
+        android:hint="Nama">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="#B0B0B0"
+            android:inputType="textPersonName"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- NIM Field -->
-    <EditText
-        android:id="@+id/etNIM"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:hint="NIM"
-        android:padding="16dp"
-        android:inputType="number"
-        android:textColorHint="#B0B0B0"/>
+        android:hint="NIM">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNIM"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="#B0B0B0"
+            android:inputType="number"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- WhatsApp Number Field -->
-    <EditText
-        android:id="@+id/etWA"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
-        android:hint="Nomor WhatsApp"
-        android:padding="16dp"
-        android:inputType="phone"
-        android:textColorHint="#B0B0B0"/>
+        android:hint="Nomor WhatsApp">
 
-    <com.byteze.labti.absensi.SignatureView
-        android:id="@+id/signatureView"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etWA"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="#B0B0B0"
+            android:inputType="phone"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="#E0E0E0"
+        android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:elevation="4dp"/>
+        android:layout_marginBottom="16dp">
+
+        <!-- SignatureView -->
+        <com.byteze.labti.absensi.SignatureView
+            android:id="@+id/signatureView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/bg_signature"
+            android:elevation="4dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- Hint TextView di tengah SignatureView -->
+        <TextView
+            android:id="@+id/tvSignatureHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tambahkan tanda tangan di sini"
+            android:textColor="#B0B0B0"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="@id/signatureView"
+            app:layout_constraintBottom_toBottomOf="@id/signatureView"
+            app:layout_constraintStart_toStartOf="@id/signatureView"
+            app:layout_constraintEnd_toEndOf="@id/signatureView"/>
+
+        <!-- Ikon Pena di atas SignatureView -->
+        <ImageView
+            android:id="@+id/ivPenIcon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/signatureic"
+            android:contentDescription="Icon Pena"
+            android:alpha="0.7"
+            android:elevation="6dp"
+            app:layout_constraintBottom_toBottomOf="@id/signatureView"
+            app:layout_constraintEnd_toEndOf="@id/signatureView"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="12dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <Button
         android:id="@+id/btnClearSignature"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Hapus Tanda Tangan"
-        android:padding="10dp"
-        android:layout_marginBottom="16dp"
-        android:elevation="2dp"/>
+        android:padding="12dp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/material_dynamic_primary0"
+        android:textColor="@android:color/white"
+        android:elevation="4dp"
+        android:layout_gravity="center"/>
 
     <!-- Submit Button -->
     <Button
@@ -64,6 +131,8 @@
         android:text="Submit"
         android:padding="12dp"
         android:textStyle="bold"
-        android:layout_gravity="center"
-        android:elevation="4dp"/>
+        android:backgroundTint="@color/material_dynamic_primary0"
+        android:textColor="@android:color/white"
+        android:elevation="4dp"
+        android:layout_gravity="center"/>
 </LinearLayout>
