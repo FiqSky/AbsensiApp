@@ -8,8 +8,11 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
@@ -30,8 +33,10 @@ class AttendanceFormActivity : AppCompatActivity() {
     private lateinit var btnSubmit: Button
     private lateinit var signatureView: SignatureView
     private lateinit var btnClearSignature: Button
+    private lateinit var tvSignatureHint: TextView
+    private lateinit var ivPenIcon: ImageView
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("MissingInflatedId", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendance_form)
@@ -43,17 +48,30 @@ class AttendanceFormActivity : AppCompatActivity() {
 
         signatureView = findViewById(R.id.signatureView)
         btnClearSignature = findViewById(R.id.btnClearSignature)
+        tvSignatureHint = findViewById(R.id.tvSignatureHint)
+        ivPenIcon = findViewById(R.id.ivPenIcon)
+
+        // Sembunyikan ikon pena saat pengguna mulai menandatangani
+        signatureView.setOnTouchListener { _, _ ->
+            if (signatureView.isSignatureDrawn()) {
+                tvSignatureHint.visibility = View.GONE
+                ivPenIcon.visibility = View.GONE
+            }
+            false
+        }
 
         btnClearSignature.setOnClickListener {
             signatureView.clear()
-            Toast.makeText(this, "Tanda tangan dihapus", Toast.LENGTH_SHORT).show()
+            tvSignatureHint.visibility = View.VISIBLE
+            ivPenIcon.visibility = View.VISIBLE
+//            Toast.makeText(this, "Tanda tangan dihapus", Toast.LENGTH_SHORT).show()
         }
 
         btnSubmit.setOnClickListener {
             if (validateForm()) {
                 val minSignatureLength = 1000f // Misalnya, 100px panjang minimal
                 if (!signatureView.isSignatureDrawn() || !signatureView.isSignatureValid(minSignatureLength)) {
-                    Toast.makeText(this, "Tanda tangan terlalu pendek atau tidak valid", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Tanda tangan terlalu pendek atau belum ada", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 

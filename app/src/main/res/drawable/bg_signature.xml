@@ -1,0 +1,12 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Warna background untuk SignatureView dengan transparansi -->
+    <solid android:color="#B3E0E0E0" />
+
+    <!-- Sudut yang membulat -->
+    <corners android:radius="12dp" />
+
+    <!-- Opsional: Tambahkan stroke jika ingin ada garis di sekitar view -->
+    <stroke
+        android:width="0.5dp"
+        android:color="#B0B0B0" />
+</shape>
